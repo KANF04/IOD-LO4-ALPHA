@@ -3,6 +3,10 @@ package pl.put.poznan.transformer.logic;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
+/**
+ * Data classes for building structure
+ * Used with Decorator Pattern for JSON serialization/deserialization
+ */
 public class BuildingClasses {
 
     public Building building;

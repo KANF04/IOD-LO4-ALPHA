@@ -1,17 +1,72 @@
 package pl.put.poznan.transformer.logic;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.io.File;
+
+/**
+ * Decorator that adds logging functionality to Reader operations.
+ * This is a concrete decorator in the Decorator pattern.
+ * Logs all read and write operations before delegating to wrapped Reader.
+ */
 public class LoggingJsonReader implements Reader {
+    private static final Logger logger = LoggerFactory.getLogger(LoggingJsonReader.class);
     private Reader wrapped;
 
+    /**
+     * Constructor - wraps another Reader with logging functionality
+     * @param wrapped The Reader instance to decorate
+     */
     public LoggingJsonReader(Reader wrapped) {
         this.wrapped = wrapped;
     }
 
     @Override
     public <T> T read(String input, Class<T> clazz) throws Exception {
-        System.out.println("Reading JSON: " + input);
-        T obj = wrapped.read(input, clazz);
-        System.out.println("Parsed object: " + obj);
-        return obj;
+        logger.info("Reading JSON string for class: {}", clazz.getSimpleName());
+        logger.debug("JSON content: {}", input);
+
+        T result = wrapped.read(input, clazz);
+
+        logger.info("Successfully parsed object of type: {}", clazz.getSimpleName());
+        logger.debug("Parsed object: {}", result);
+
+        return result;
+    }
+
+    @Override
+    public <T> T readFromFile(File file, Class<T> clazz) throws Exception {
+        logger.info("Reading JSON from file: {} for class: {}", file.getAbsolutePath(), clazz.getSimpleName());
+
+        T result = wrapped.readFromFile(file, clazz);
+
+        logger.info("Successfully parsed object from file: {}", file.getName());
+        logger.debug("Parsed object: {}", result);
+
+        return result;
+    }
+
+    @Override
+    public String write(Object obj) throws Exception {
+        logger.info("Writing object to JSON string: {}", obj.getClass().getSimpleName());
+        logger.debug("Object content: {}", obj);
+
+        String result = wrapped.write(obj);
+
+        logger.info("Successfully serialized object to JSON");
+        logger.debug("JSON output: {}", result);
+
+        return result;
+    }
+
+    @Override
+    public void writeToFile(Object obj, File file) throws Exception {
+        logger.info("Writing object to JSON file: {} (type: {})",
+                file.getAbsolutePath(), obj.getClass().getSimpleName());
+        logger.debug("Object content: {}", obj);
+
+        wrapped.writeToFile(obj, file);
+
+        logger.info("Successfully wrote JSON to file: {}", file.getName());
     }
 }
