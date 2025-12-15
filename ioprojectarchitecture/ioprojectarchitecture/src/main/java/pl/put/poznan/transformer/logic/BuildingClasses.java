@@ -33,8 +33,13 @@ public class BuildingClasses {
         public double light;
     }
 
-    // --- CALCULATION AND FINDER METHODS ---
 
+    /**
+     * Calculates the total volume of a building.
+     *
+     * @param building The building for which to calculate the volume.
+     * @return The total volume of the building.
+     */
     public double calculateVolume(Building building) {
         if (building == null || building.levels == null) {
             return 0.0;
@@ -42,6 +47,12 @@ public class BuildingClasses {
         return building.levels.stream().mapToDouble(this::calculateVolume).sum();
     }
 
+    /**
+     * Calculates the total volume of a level.
+     *
+     * @param level The level for which to calculate the volume.
+     * @return The total volume of the level.
+     */
     public double calculateVolume(Level level) {
         if (level == null || level.rooms == null) {
             return 0.0;
@@ -49,6 +60,12 @@ public class BuildingClasses {
         return level.rooms.stream().mapToDouble(this::calculateVolume).sum();
     }
 
+    /**
+     * Calculates the volume of a room.
+     *
+     * @param room The room for which to calculate the volume.
+     * @return The volume of the room.
+     */
     public double calculateVolume(Room room) {
         if (room == null) {
             return 0.0;
@@ -56,27 +73,4 @@ public class BuildingClasses {
         return room.cube;
     }
 
-    public Optional<Level> findLevelById(String levelId) {
-        if (this.building == null || this.building.levels == null || levelId == null) {
-            return Optional.empty();
-        }
-        return this.building.levels.stream()
-                .filter(level -> levelId.equals(level.id))
-                .findFirst();
-    }
-
-    public Optional<Room> findRoomById(String levelId, String roomId) {
-        if (roomId == null) {
-            return Optional.empty();
-        }
-        return findLevelById(levelId)
-                .flatMap(level -> {
-                    if (level.rooms == null) {
-                        return Optional.empty();
-                    }
-                    return level.rooms.stream()
-                            .filter(room -> roomId.equals(room.id))
-                            .findFirst();
-                });
-    }
 }
