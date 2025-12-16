@@ -2,6 +2,7 @@ package pl.put.poznan.transformer.logic;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Data classes for building structure
@@ -31,4 +32,45 @@ public class BuildingClasses {
         public double heating;
         public double light;
     }
+
+
+    /**
+     * Calculates the total volume of a building.
+     *
+     * @param building The building for which to calculate the volume.
+     * @return The total volume of the building.
+     */
+    public double calculateVolume(Building building) {
+        if (building == null || building.levels == null) {
+            return 0.0;
+        }
+        return building.levels.stream().mapToDouble(this::calculateVolume).sum();
+    }
+
+    /**
+     * Calculates the total volume of a level.
+     *
+     * @param level The level for which to calculate the volume.
+     * @return The total volume of the level.
+     */
+    public double calculateVolume(Level level) {
+        if (level == null || level.rooms == null) {
+            return 0.0;
+        }
+        return level.rooms.stream().mapToDouble(this::calculateVolume).sum();
+    }
+
+    /**
+     * Calculates the volume of a room.
+     *
+     * @param room The room for which to calculate the volume.
+     * @return The volume of the room.
+     */
+    public double calculateVolume(Room room) {
+        if (room == null) {
+            return 0.0;
+        }
+        return room.cube;
+    }
+
 }
