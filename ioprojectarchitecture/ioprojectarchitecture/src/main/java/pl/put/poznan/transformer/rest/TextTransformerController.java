@@ -64,12 +64,6 @@ public class TextTransformerController {
             BuildingClasses.Building building = buildingData.building;
             String result = "";
             
-            if (options != null && Arrays.asList(options).contains("1")) {
-                String buildingVolumes = calculateBuildingVolumes(building);
-                result += "\n";
-                result += buildingVolumes;
-                result += "\n";
-            }
             // Create transformer with decorated reader
             TextTransformer transformer = new TextTransformer(new String[]{}, reader);
 
@@ -188,71 +182,34 @@ public class TextTransformerController {
         }
     }
 
-    
+    @PostMapping(value = "/calculateVolume", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<?> calculateVolume(@RequestParam("file") MultipartFile file) {
+        try {
+            // 1. Read file and parse to Building object
+            File tempFile = File.createTempFile("volume-calc-", ".json");
+            file.transferTo(tempFile);
+            Reader reader = new LoggingJsonReader(new JsonReader());
+            BuildingClasses buildingData = reader.readFromFile(tempFile, BuildingClasses.class);
+            BuildingClasses.Building building = buildingData.building;
+            tempFile.delete();
 
-    /**
-     * Calculates and returns a detailed string report of volumes for all rooms, levels, and the building
-     * Uses methods from BuildingClasses for calculations
-     * @param building Building object containing the structure to analyze
-     * @return Formatted string with volume calculations for rooms, levels, and total building volume
-     */
-    public String calculateBuildingVolumes(BuildingClasses.Building building) {
-        if (building == null) {
-            return "Error: Building object is null";
-        }
-
-        StringBuilder result = new StringBuilder();
-        result.append("=== BUILDING VOLUME REPORT ===\n\n");
-        result.append("Building: ").append(building.name != null ? building.name :  "Unnamed")
-                .append(" (ID: ").append(building.id != null ? building. id : "N/A").append(")\n\n");
-
-        if (building.levels == null || building.levels.isEmpty()) {
-            result.append("No levels found in the building.\n");
-            return result.toString();
-        }
-
-        BuildingClasses buildingClasses = new BuildingClasses();
-        buildingClasses.building = building;
-
-        // Calculate and display volumes for each level and its rooms
-        int levelNumber = 1;
-        for (BuildingClasses.Level level :  building.levels) {
-            result.append("--- LEVEL ").append(levelNumber).append(" ---\n");
-            result.append("Level: ").append(level.name != null ?  level.name : "Unnamed")
-                    .append(" (ID:  ").append(level.id != null ? level.id : "N/A").append(")\n");
-
-            if (level.rooms == null || level.rooms.isEmpty()) {
-                result.append("  No rooms on this level.\n");
-                result.append("  Level Total Volume: 0.00 m³\n\n");
-            } else {
-                // Display each room's volume
-                for (BuildingClasses.Room room :  level.rooms) {
-                    result.append("  Room: ").append(room.name != null ? room.name : "Unnamed")
-                            .append(" (ID: ").append(room.id != null ? room.id : "N/A")
-                            .append(") - Volume: ").append(String.format("%.2f", buildingClasses.calculateVolume(room))).append(" m³\n");
-                }
-
-                double levelTotalVolume = buildingClasses.calculateVolume(level);
-
-                result.append("  ---\n");
-                result. append("  Level Total Volume: ").append(String.format("%.2f", levelTotalVolume)).append(" m³\n");
-                result.append("  Number of Rooms: ").append(level.rooms.size()).append("\n\n");
+            if (building == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid building data in file.");
             }
 
-            levelNumber++;
+            // 2. Use the Visitor to create the report
+            VolumeReportVisitor visitor = new VolumeReportVisitor();
+            building.accept(visitor);
+            VolumeReportVisitor.VolumeReport report = visitor.getReport();
+
+            // 3. Return the report
+            return ResponseEntity.ok(report);
+
+        } catch (Exception e) {
+            logger.error("Error calculating volume", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error processing file: " + e.getMessage());
         }
-
-        double totalBuildingVolume = buildingClasses.calculateVolume(building);
-        int totalRooms = building.levels.stream()
-                .mapToInt(level -> level.rooms != null ?  level.rooms.size() : 0)
-                .sum();
-
-        result.append("=========================\n");
-        result.append("TOTAL BUILDING VOLUME:  ").append(String.format("%.2f", totalBuildingVolume)).append(" m³\n");
-        result.append("Total Number of Levels: ").append(building.levels.size()).append("\n");
-        result.append("Total Number of Rooms: ").append(totalRooms).append("\n");
-        result.append("=========================\n");
-
-        return result.toString();
     }
 }
