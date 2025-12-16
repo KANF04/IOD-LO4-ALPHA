@@ -243,4 +243,45 @@ public class TextTransformerController {
                     .body("Error processing file: " + e.getMessage());
         }
     }
+    /**
+     * Calculate total area for building structure from uploaded file
+     * Uses Visitor Pattern for traversing building structure
+     * Uses Decorator Pattern for JSON reading
+     */
+    @PostMapping(value = "/calculateArea", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<? > calculateArea(@RequestParam("file") MultipartFile file) {
+        try {
+            logger.info("Calculating area from file: {}", file.getOriginalFilename());
+
+            // 1. Read file and parse to Building object
+            // Using Decorator Pattern:  Base -> Logging
+            File tempFile = File.createTempFile("area-calc-", ".json");
+            file.transferTo(tempFile);
+            Reader reader = new LoggingJsonReader(new JsonReader());
+            BuildingClasses wrapper = reader. readFromFile(tempFile, BuildingClasses.class);
+
+            // 2. Apply Visitor Pattern to generate area report
+            AreaReportVisitor visitor = new AreaReportVisitor();
+            if (wrapper.building != null) {
+                wrapper.building.accept(visitor);
+            }
+
+            // 3. Get the generated report
+            AreaReportVisitor.AreaReport areaReport = visitor.getReport();
+
+            // 4. Clean up temporary file
+            tempFile.delete();
+
+            logger.info("Area calculation completed successfully");
+
+            // 5. Return report as JSON (Spring automatically serializes)
+            return ResponseEntity. ok(areaReport);
+
+        } catch (Exception e) {
+            logger.error("Error calculating area", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error calculating area: " + e.getMessage());
+        }
+    }
 }

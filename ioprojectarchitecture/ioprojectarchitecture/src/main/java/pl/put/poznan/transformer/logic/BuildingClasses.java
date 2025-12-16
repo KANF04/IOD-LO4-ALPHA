@@ -145,4 +145,112 @@ public class BuildingClasses {
         return room.light / room.area;
     }
 
+
+
+    /**
+     * Calculates the total area of a building.
+     *
+     * @param building The building for which to calculate the area.
+     * @return The total area of the building.
+     */
+    public double calculateArea(Building building) {
+        if (building == null || building.levels == null) {
+            return 0.0;
+        }
+        return building.levels.stream().mapToDouble(this::calculateArea).sum();
+    }
+
+    /**
+     * Calculates the total area of a level.
+     *
+     * @param level The level for which to calculate the area.
+     * @return The total area of the level.
+     */
+    public double calculateArea(Level level) {
+        if (level == null || level.rooms == null) {
+            return 0.0;
+        }
+        return level.rooms.stream().mapToDouble(this::calculateArea).sum();
+    }
+
+    /**
+     * Calculates the area of a room.
+     *
+     * @param room The room for which to calculate the area.
+     * @return The area of the room.
+     */
+    public double calculateArea(Room room) {
+        if (room == null) {
+            return 0.0;
+        }
+        return room.area;
+    }
+
+
+
+    /**
+     * DTO class for detailed area report
+     */
+    public static class AreaReport {
+        public String buildingId;
+        public String buildingName;
+        public double totalArea;
+        public List<LevelAreaReport> levels;
+    }
+
+    public static class LevelAreaReport {
+        public String levelId;
+        public String levelName;
+        public double totalArea;
+        public List<RoomAreaReport> rooms;
+    }
+
+    public static class RoomAreaReport {
+        public String roomId;
+        public String roomName;
+        public double area;
+    }
+
+    /**
+     * Generates a detailed area report for a building containing
+     * building name, id, total area and all levels with their rooms.
+     *
+     * @param building The building for which to generate the report.
+     * @return AreaReport object containing detailed information about areas.
+     */
+    public AreaReport generateAreaReport(Building building) {
+        if (building == null) {
+            return null;
+        }
+
+        AreaReport report = new AreaReport();
+        report.buildingId = building.id;
+        report.buildingName = building. name;
+        report.totalArea = calculateArea(building);
+        report.levels = new java.util.ArrayList<>();
+
+        if (building.levels != null) {
+            for (Level level : building.levels) {
+                LevelAreaReport levelReport = new LevelAreaReport();
+                levelReport.levelId = level.id;
+                levelReport.levelName = level. name;
+                levelReport.totalArea = calculateArea(level);
+                levelReport.rooms = new java.util.ArrayList<>();
+
+                if (level.rooms != null) {
+                    for (Room room : level.rooms) {
+                        RoomAreaReport roomReport = new RoomAreaReport();
+                        roomReport.roomId = room.id;
+                        roomReport.roomName = room.name;
+                        roomReport.area = room.area;
+                        levelReport.rooms.add(roomReport);
+                    }
+                }
+
+                report.levels.add(levelReport);
+            }
+        }
+
+        return report;
+    }
 }
