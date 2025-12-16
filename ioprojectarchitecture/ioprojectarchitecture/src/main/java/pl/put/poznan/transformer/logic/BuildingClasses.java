@@ -101,4 +101,48 @@ public class BuildingClasses {
         return room.cube;
     }
 
+    /**
+     * Calculates the average luminosity of a building across all rooms.
+     *
+     * @param building The building for which to calculate the luminosity.
+     * @return The average luminosity of the building.
+     */
+    public double calculateLuminosity(Building building) {
+        if (building == null || building.levels == null) {
+            return 0.0;
+        }
+        return building.levels.stream()
+                .filter(level -> level.rooms != null)
+                .flatMap(level -> level.rooms.stream())
+                .mapToDouble(this::calculateLuminosity)
+                .average()
+                .orElse(0.0);
+    }
+
+    /**
+     * Calculates the average luminosity of a level.
+     *
+     * @param level The level for which to calculate the luminosity.
+     * @return The average luminosity of the level.
+     */
+    public double calculateLuminosity(Level level) {
+        if (level == null || level.rooms == null || level.rooms.isEmpty()) {
+            return 0.0;
+        }
+        return level.rooms.stream().mapToDouble(this::calculateLuminosity).average().orElse(0.0);
+    }
+
+    /**
+     * Calculates the luminosity of a room.
+     *
+     * @param room The room for which to calculate the luminosity.
+     * @return The luminosity of the room.
+     */
+    public double calculateLuminosity(Room room) {
+        if (room == null || room.area == 0) {
+            return 0.0;
+        }
+        return room.light / room.area;
+    }
+
 }

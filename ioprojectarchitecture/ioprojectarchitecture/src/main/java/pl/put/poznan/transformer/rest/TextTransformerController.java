@@ -212,4 +212,35 @@ public class TextTransformerController {
                     .body("Error processing file: " + e.getMessage());
         }
     }
+
+    @PostMapping(value = "/calculateLuminosity", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<?> calculateLuminosity(@RequestParam("file") MultipartFile file) {
+        try {
+            // 1. Read file and parse to Building object
+            File tempFile = File.createTempFile("luminosity-calc-", ".json");
+            file.transferTo(tempFile);
+            Reader reader = new LoggingJsonReader(new JsonReader());
+            BuildingClasses buildingData = reader.readFromFile(tempFile, BuildingClasses.class);
+            BuildingClasses.Building building = buildingData.building;
+            tempFile.delete();
+
+            if (building == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid building data in file.");
+            }
+
+            // 2. Use the Visitor to create the report
+            LuminosityReportVisitor visitor = new LuminosityReportVisitor();
+            building.accept(visitor);
+            LuminosityReportVisitor.LuminosityReport report = visitor.getReport();
+
+            // 3. Return the report
+            return ResponseEntity.ok(report);
+
+        } catch (Exception e) {
+            logger.error("Error calculating luminosity", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error processing file: " + e.getMessage());
+        }
+    }
 }
