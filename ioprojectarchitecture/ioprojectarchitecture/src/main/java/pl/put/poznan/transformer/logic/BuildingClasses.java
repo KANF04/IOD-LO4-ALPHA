@@ -10,18 +10,42 @@ import java.util.Optional;
  */
 public class BuildingClasses {
 
+    public interface Visitor {
+        void visit(Building building);
+        void visit(Level level);
+        void visit(Room room);
+    }
+
     public Building building;
 
     public static class Building {
         public String id;
         public String name;
         public List<Level> levels;
+
+        public void accept(Visitor visitor) {
+            visitor.visit(this);
+            if (levels != null) {
+                for (Level level : levels) {
+                    level.accept(visitor);
+                }
+            }
+        }
     }
 
     public static class Level {
         public String id;
         public String name;
         public List<Room> rooms;
+
+        public void accept(Visitor visitor) {
+            visitor.visit(this);
+            if (rooms != null) {
+                for (Room room : rooms) {
+                    room.accept(visitor);
+                }
+            }
+        }
     }
 
     public static class Room {
@@ -31,6 +55,10 @@ public class BuildingClasses {
         public double cube;
         public double heating;
         public double light;
+
+        public void accept(Visitor visitor) {
+            visitor.visit(this);
+        }
     }
 
 
