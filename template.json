@@ -10,7 +10,7 @@
           {
             "id": 111,
             "name": "L126",
-            "area": 100,
+            "area": 70,
             "cube": 500,
             "heating": 15.2,
             "light": 3200
@@ -18,7 +18,7 @@
           {
             "id": 112,
             "name": "L1.6.18",
-            "area": 50,
+            "area": 30,
             "cube": 120,
             "heating": 12.2,
             "light": 2200
